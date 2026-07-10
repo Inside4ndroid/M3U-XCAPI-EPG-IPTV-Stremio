@@ -426,7 +426,7 @@ A `serverless.js` handler is included (experimental):
 
 | Kind | Pattern |
 |------|---------|
-| Live Channel | `iptv_live_<stream_id | md5>` |
+| Live Channel | Direct/M3U: `iptv_<stable metadata hash>`; Xtream API: `iptv_live_<stream_id>` |
 | Movie | `iptv_vod_<stream_id | md5>` |
 | Series | `iptv_series_<series_id | hash>` |
 | Episode | `iptv_series_ep_<episode_hash | xtream_id>` |

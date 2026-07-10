@@ -80,6 +80,26 @@ function createCacheKey(config) {
     return crypto.createHash('md5').update(stableStringify(minimal)).digest('hex');
 }
 
+function createStableM3UItemId(item) {
+    const attributes = item.attributes || {};
+    const identityParts = [
+        attributes['tvg-id'],
+        attributes['tvg-name'],
+        item.name,
+        attributes['group-title']
+    ].map(value => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase());
+
+    // Stream URLs can rotate whenever the playlist refreshes. Using one in the
+    // ID makes a catalog item impossible to resolve through /meta or /stream
+    // after such a refresh. Prefer stable playlist metadata and only fall back
+    // to the URL when the EXTINF entry has no identity fields at all.
+    const idSource = identityParts.some(Boolean)
+        ? [item.type || '', ...identityParts].join('\x1f')
+        : String(item.url || '');
+
+    return `iptv_${crypto.createHash('md5').update(idSource).digest('hex').substring(0, 16)}`;
+}
+
 class M3UEPGAddon {
     constructor(config = {}, manifestRef) {
         if (!config.provider) {
@@ -254,7 +274,7 @@ class M3UEPGAddon {
                     );
 
                 currentItem.type = isSeries ? 'series' : (isMovie ? 'movie' : 'tv');
-                currentItem.id = `iptv_${crypto.createHash('md5').update(currentItem.name + currentItem.url).digest('hex').substring(0, 16)}`;
+                currentItem.id = createStableM3UItemId(currentItem);
                 items.push(currentItem);
                 currentItem = null;
             }
